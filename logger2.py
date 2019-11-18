@@ -9,14 +9,16 @@ keys = []
 prev_time = 0
 id = True
 length = 0
+combined = 0
 
 
 # detect and write press to terminals
 def on_press(key):
-    global count, keys
+    global count, keys, combined
     keys.append(key)
     count += 1
 
+    print(combined)
     print("{0}".format(key))
 
     # timer applicable if don't want to write every second
@@ -28,7 +30,7 @@ def on_press(key):
 
 # write officially to logging.txt
 def write_file(keys):
-    global prev_time, id, length
+    global prev_time, id, length, combined
 
     with open("logging.txt", "a") as f: # append mode (f)
         for key in keys:
@@ -40,10 +42,16 @@ def write_file(keys):
                 f.write('\nID\n')
                 write_letter(k, f)
             elif k.find("enter") > 0:
+                f.write(str(combined) + "\n")
+                f.write(str(combined / (length - 1)) + "\n")
+                combined = 0
                 f.write("PW length: " + str(length))
                 length = 0
                 f.write('\nID')
             elif k.find("tab") > 0:
+                f.write(str(combined) + "\n")
+                f.write(str(combined / (length - 1)) + "\n")
+                combined = 0
                 f.write("ID length: " + str(length))
                 length = 0
                 f.write("\nPW")
@@ -62,13 +70,18 @@ def write_file(keys):
 
 # writes a single letter
 def write_letter(k, f):
-    global prev_time
+    global prev_time, combined
     
     f.write(str(k) + " - ")
     # write time and milliseconds between times
     curr_time = int(round(time.time() * 1000))
+    print(str(prev_time) + " " + str(curr_time))
     difference = curr_time - prev_time
     prev_time = curr_time
+    print("diff " + str(difference))
+    print("comb " + str(combined))
+    if difference != curr_time:
+        combined = combined + difference
     f.write(str(difference) + " - ")
 
     f.write(str(datetime.datetime.now()))
@@ -77,6 +90,8 @@ def write_letter(k, f):
 # when esc is pressed, cancel the program
 def on_release(key):
     if key == Key.esc:
+        combined = 0
+        prev_time = 0
         return False
 
 
